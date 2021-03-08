@@ -8,7 +8,7 @@ const startDiv = document.getElementById("divStart");
 const blue = document.querySelector(".blue");
 const green = document.querySelector(".green");
 const red = document.querySelector(".red");
-const yellow = document.querySelector(".yellow");   
+const yellow = document.querySelector(".yellow");
 
 let audioYellow = new Audio();
 let audioGreen = new Audio();
@@ -39,6 +39,7 @@ let shuffleOrder = () => {
   order[order.length] = colorOrder;
   clickedOrder = [];
 
+
   for (let i in order) {
     let elementColor = createElementColor(order[i]);
     lightColor(elementColor, Number(i) + 1);
@@ -48,7 +49,6 @@ let shuffleOrder = () => {
 let lightColor = (element, time) => {
   time = time * 1000;
   setTimeout(() => {
-    console.log(element);
     if (element.classList.contains("red")) {
       audioRed.play();
     } else if (element.classList.contains("yellow")) {
@@ -68,26 +68,30 @@ let lightColor = (element, time) => {
 
 let checkOrder = async () => {
   for (let i in clickedOrder) {
-    if (clickedOrder.length == order.length) {
-        await Swal.fire({
-            icon: 'success',
-            title: `Acertou, próximo nível`,
-            showConfirmButton: false,
-            timer: 1000
-          }).then(async ()=> {
-            await Swal.fire({
-                icon: 'info',
-                title: `Pontuação: ${score}`,
-                showConfirmButton: false,
-                timer: 2000
-              })
-          })
-          nextLevel();
-          break;
-
-    }
     if (clickedOrder[i] != order[i]) {
-      gameOver();
+      document.querySelector(".genius").classList.add("spin");
+      await gameOver();
+      document.querySelector(".genius").classList.remove("spin");
+      break;
+    }
+
+    if (await arraysEqual(clickedOrder, order)) {
+      document.querySelector(".genius").classList.add("spin");
+      await Swal.fire({
+        icon: "success",
+        title: `Acertou, próximo nível`,
+        showConfirmButton: false,
+        timer: 1000,
+      }).then(async () => {
+      document.querySelector(".genius").classList.remove("spin");
+         await Swal.fire({
+          icon: "info",
+          title: `Pontuação: ${score}`,
+          showConfirmButton: false,
+          timer: 2000,
+        });
+      });
+      nextLevel();
       break;
     }
   }
@@ -129,81 +133,83 @@ let nextLevel = () => {
 };
 
 let gameOver = () => {
-    document.querySelector("#soundtrack").pause();
-    document.querySelector("#gameover").play();
-    document.querySelector("#gameover").volume = 0.05;
+  document.querySelector("#soundtrack").pause();
+  document.querySelector("#gameover").play();
+  document.querySelector("#gameover").volume = 0.05;
+  Swal.fire({
+    icon: "error",
+    title: `Errou, o jogo será reiniciado`,
+    showConfirmButton: false,
+    timer: 1000,
+  }).then(() => {
     Swal.fire({
-        icon: 'error',
-        title: `Errou, o jogo será reiniciado`,
-        showConfirmButton: false,
-        timer: 1000
-      }).then(()=> {
-        Swal.fire({
-            icon: 'info',
-            title: `Sua pontuação foi: ${score - 1}`,
-            showConfirmButton: false,
-            timer: 1000
-          }).then(()=> {
-            green.classList.remove("selected");
-            red.classList.remove("selected");
-            blue.classList.remove("selected");
-            yellow.classList.remove("selected");
-            green.classList.add("green-i");
-            red.classList.add("red-i");
-            blue.classList.add("blue-i");
-            yellow.classList.add("yellow-i");
-            green.onclick = () => undefined;
-            red.onclick = () => undefined;
-            yellow.onclick = () => undefined;
-            blue.onclick = () => undefined;
-            score = 0;
-            order = [];
-            clickedOrder = [];
-            startDiv.classList.remove("hide");
-          })
-      })
+      icon: "info",
+      title: `Sua pontuação foi: ${score - 1}`,
+      showConfirmButton: false,
+      timer: 1000,
+    }).then(() => {
+      green.classList.remove("selected");
+      red.classList.remove("selected");
+      blue.classList.remove("selected");
+      yellow.classList.remove("selected");
+      green.classList.add("green-i");
+      red.classList.add("red-i");
+      blue.classList.add("blue-i");
+      yellow.classList.add("yellow-i");
+      green.onclick = () => undefined;
+      red.onclick = () => undefined;
+      yellow.onclick = () => undefined;
+      blue.onclick = () => undefined;
+      document.querySelector(".genius").classList.remove("spin");
 
-
+      score = 0;
+      order = [];
+      clickedOrder = [];
+      startDiv.classList.remove("hide");
+    });
+  });
 };
 
 let playGame = () => {
+  Swal.fire({
+    position: "center",
+    html: "Bem vindo ao <strong>GENIUS</strong>",
+    showConfirmButton: false,
+    timer: 2000,
+  }).then(() => {
     Swal.fire({
-        position: 'center-start',
-        title: 'Bem vindo ao genius',
-        showConfirmButton: false,
-        timer: 1500
-      }).then(()=> {
-        Swal.fire({
-            position: 'center-end',
-            icon: 'warning',
-            title: 'Seu jogo irá iniciar',
-            showConfirmButton: false,
-            timer: 1000}).then(()=> {
-                score = 0;
-                order = [];
-                clickedOrder = [];
-                green.classList.remove("selected");
-                red.classList.remove("selected");
-                blue.classList.remove("selected");
-                yellow.classList.remove("selected");
-                nextLevel();
-            })
-      })
-
+      position: "center",
+      icon: "warning",
+      title: "Seu jogo irá iniciar",
+      showConfirmButton: false,
+      timer: 2000,
+    }).then(() => {
+      score = 0;
+      order = [];
+      clickedOrder = [];
+      green.classList.remove("selected");
+      red.classList.remove("selected");
+      blue.classList.remove("selected");
+      yellow.classList.remove("selected");
+      nextLevel();
+    });
+  });
 };
 
 green.classList.add("green-i");
 red.classList.add("red-i");
 blue.classList.add("blue-i");
 yellow.classList.add("yellow-i");
-document.addEventListener("play", function(evt)
-{
-    if(window.$_currentlyPlaying && window.$_currentlyPlaying != evt.target)
-    {
-        window.$_currentlyPlaying.pause();
-    } 
+document.addEventListener(
+  "play",
+  function (evt) {
+    if (window.$_currentlyPlaying && window.$_currentlyPlaying != evt.target) {
+      window.$_currentlyPlaying.pause();
+    }
     window.$_currentlyPlaying = evt.target;
-}, true);
+  },
+  true
+);
 start.onclick = () => {
   document.querySelector("#gameover").pause();
   document.querySelector("#soundtrack").play();
@@ -231,3 +237,14 @@ start.onclick = () => {
   };
   startDiv.classList.add("hide");
 };
+
+async function arraysEqual(a, b) {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (a.length !== b.length) return false;
+
+  for (var i = 0; i < a.length; ++i) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
